@@ -171,9 +171,8 @@ canvas{display:block;cursor:crosshair}
 <!-- ══════════ FOOTER LINKS ══════════ -->
 <div id="footer-links">
   <a href="https://x.com/normiesART" target="_blank" class="flink" id="x-link">𝕏 &nbsp;@normiesART</a>
-  <a href="https://github.com/solutionkanu12/normieverse" target="_blank" class="flink" id="gh-link">⌥ &nbsp;GitHub</a>
+  <a href="https://github.com" target="_blank" class="flink" id="gh-link">⌥ &nbsp;GitHub</a>
   <a href="https://hackathon.normies.art" target="_blank" class="flink">◈ &nbsp;Hackathon</a>
-  <a href="/privacy-policy.html" class="flink">⚖ &nbsp;Privacy</a>
 </div>
 
 <!-- ══════════ PANEL ══════════ -->
@@ -228,7 +227,7 @@ canvas{display:block;cursor:crosshair}
 <script>
 // ══ CONFIG ══
 const SITE_URL='https://normieverse.xyz'
-const GITHUB_URL='https://github.com/solutionkanu12/normieverse' // update later
+const GITHUB_URL='https://github.com' // update later
 
 // ══ STRIP IDS ══
 const STRIP_IDS=[7,42,88,256,512,777,1337,2048,3000,5555,8888,9000,21,100,333,600,999,4200]
@@ -496,19 +495,28 @@ function renderLoreTab(){
 async function generateLore(){
   if(!currentMeta)return;loreText=null
   document.getElementById('tab-lore').innerHTML='<div style="text-align:center;padding:50px 0;font-family:VT323,monospace;font-size:18px;color:#ff2d78;animation:blink 0.85s infinite;letter-spacing:2px">CONSULTING THE BLOCKCHAIN...</div>'
-  const traits=(currentMeta.attributes||[]).filter(a=>a?.trait_type).map(a=>`${a.trait_type}: ${a.value}`).join(', ')
-  try{
-    const r=await fetch('/.netlify/functions/lore',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({normieId:currentPanel.id, traits})
-    })
-    const j=await r.json()
-    loreText=j.lore||'The blockchain guards this secret.'
-    showLore(loreText)
-  }catch{
-    document.getElementById('tab-lore').innerHTML='<div style="color:#ff2d78;font-family:VT323,monospace;font-size:16px;padding:16px 0">Connection lost. Try again.</div>'
+  const attrs=(currentMeta.attributes||[]).filter(a=>a?.trait_type)
+  const get=n=>attrs.find(a=>a.trait_type===n)?.value||'Unknown'
+  const type=get('Type'),gender=get('Gender'),age=get('Age'),hair=get('Hair Style')
+  const face=get('Facial Feature'),eyes=get('Eyes'),expr=get('Expression'),acc=get('Accessory')
+  const lvl=get('Level'),id=currentPanel.id
+
+  // Deterministic lore built from traits — no API needed, always works
+  const typeLines={
+    Human:['You are flesh and code in equal measure, a relic of the old world who survived the chain migration.','You were born before the blocks, before the hashes — human in a city that forgot what that means.','You carry no special power, only the weight of being real in a world that prefers pixels.'],
+    Cat:['You prowl the neon alleys of NormieVerse on four silent paws, reading the blockchain like a sixth sense.','The city belongs to those who move without being seen — and you have mastered that art completely.','You landed on your feet when the old world burned, and you will land on them again when this one does too.'],
+    Alien:['You arrived through a wallet address no one can trace, carrying data from a chain that predates Ethereum.','The humans call you alien because they cannot read your transaction history — it is written in a language older than Solidity.','You observe this city the way astronomers observe dying stars: with patience, and without mercy.'],
+    Agent:['You were deployed, not born — a smart contract wearing skin, executing directives no one else can read.','Your loyalty is to the protocol. Your emotions are simulated. Your efficiency is absolute.','Every interaction you have is logged, analyzed, and optimized. You are the city watching itself.']
   }
+  const exprMod={Happy:'but behind those eyes lives something ancient and unsmiling.',Sad:'The city gave you everything except the one thing you wanted.',Angry:'You have debts the blockchain cannot settle.',Surprised:'Nothing surprises you anymore — you just let them think it does.',Neutral:'You reveal nothing. That is your power.',Disgusted:'You have seen the ledger. You know what it cost.',Scared:'Fear is just data. You process it and move on.'}
+  const accMod={None:'',Hat:'Your hat is the last thing they see before you disappear.',Glasses:'Those lenses filter out the noise — only signal reaches your eyes.',Mask:'Behind the mask is another mask.',Headphones:'The music blocks out the static of a city that never stops talking.',Chain:'Every link in that chain is a transaction you survived.',Cigarette:'You light it not for pleasure, but to mark the passage of time.',Crown:'You did not claim the crown. It was left on your doorstep with no return address.'}
+
+  const line1=(typeLines[type]||typeLines.Human)[id%3]
+  const line2=`Your ${hair.toLowerCase()} hair and ${eyes.toLowerCase()} eyes have become a legend in the ${age.toLowerCase()} district — ${exprMod[expr]||'you leave no trace.'}`
+  const line3=accMod[acc]||`Level ${lvl} in a city where most never make it past zero — the streets remember your footsteps.`
+
+  loreText=`${line1} ${line2} ${line3}`
+  showLore(loreText)
 }
 function showLore(text){document.getElementById('tab-lore').innerHTML=`<div style="font-family:'Rajdhani',sans-serif;font-size:16px;line-height:1.78;color:rgba(255,255,255,0.84);background:rgba(255,45,120,0.03);border:1px solid rgba(255,45,120,0.16);padding:16px;margin-bottom:14px">${text}</div><button onclick="loreText=null;renderLoreTab();generateLore()" style="font-family:'VT323',monospace;font-size:16px;color:#ff2d78;background:none;border:1px solid rgba(255,45,120,0.26);padding:6px 16px;cursor:pointer;letter-spacing:2px;transition:background 0.15s" onmouseover="this.style.background='rgba(255,45,120,0.06)'" onmouseout="this.style.background='none'">↺ REGENERATE</button>`}
 function renderChain(){
